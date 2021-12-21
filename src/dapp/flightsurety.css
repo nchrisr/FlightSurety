@@ -1,0 +1,146 @@
+body {
+    background-image: url('flight.jpg'); /* Source: iStockPhoto */
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: black;
+}
+
+.accordion {
+    background-color: #eee;
+    color: rgb(36, 31, 31);
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 20px;
+    font-weight: bold;
+    transition: 0.4s;
+    margin-bottom: 0px;
+  }
+  
+.active, .accordion:hover {
+    background-color: #ccc;
+}
+  
+.accordion:after {
+    content: '\002B';
+    color: #777;
+    font-weight: bold;
+    float: right;
+    margin-left: 50px;
+}
+  
+.active:after {
+    content: "\2212";
+}
+  
+.panel {
+    padding: 0px 20px 0px 20px;
+    margin: 10px 20px 10px 20px;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}
+
+.container {
+    margin-top: 400px;
+    background-color: #000;
+    opacity: 0.9;
+    color: #fff;
+    padding: 40px;
+}
+
+.panel button {
+    margin: 10px;
+}
+
+.margin-top-20 {
+    margin-top: 20px;
+}
+
+h5 {
+    color: #999999;
+}
+
+section {
+    margin-bottom: 50px;
+}
+
+.field {
+    font-weight: bold;
+    text-align: right;
+}
+
+.field-value {
+    color: #0e7fa8;
+}
+
+label.form {
+    font-size: 16px;
+    margin-right: 20px;
+    color: black;
+    font-weight: bold;
+}
+
+input {
+    margin-right: 30px;
+}
+
+p {
+    color: black
+}
+
+.title-text {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+}
+
+.padded-select {
+    margin: 10px 100px 10px 10px;
+}
+
+#FundAirlineAddressLabel {
+    color: gray;
+    font-size: 25;
+}
+
+select {
+  /* styling */
+  background-color: white;
+  border: thin solid gray;
+  border-radius: 4px;
+  display: inline-block;
+  font: inherit;
+  line-height: 1.5em;
+  padding: 0.5em 3.5em 0.5em 1em;
+
+  /* reset */
+
+  margin: 0;      
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, black 50%),
+    linear-gradient(135deg, black 50%, transparent 50%),
+    linear-gradient(to right, gray, gray);
+
+  background-position:
+    calc(100% - 20px) calc(1em + 2px),
+    calc(100% - 15px) calc(1em + 2px),
+    100% 0;
+
+  background-size:
+    5px 5px,
+    5px 5px,
+    2.5em 2.5em;
+  background-repeat: no-repeat;
+  
+}

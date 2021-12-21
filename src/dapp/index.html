@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>FlightSurety</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+    </head>
+
+    <body>
+
+        <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+            <a class="navbar-brand" href="#">FlightSurety</a>
+            <!-- <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault"
+                aria-expanded="false" aria-label="Toggle navigation"> Sample
+                <span class="navbar-toggler-icon"></span>
+            </button> -->
+        </nav>
+
+        <main class="container"> 
+            
+            <div id="display-wrapper" class="top-20">
+            </div>
+
+            <button class="accordion">Flight</button>
+            <div class="panel">
+                <label class="form">Flight</label>
+                <input type="text" id="flight-number"> 
+                <button class="btn btn-primary" id="submit-oracle">Submit to Oracles</button>  
+            </div>
+
+            <button class="accordion">Register Airline</button>
+            <div class="panel">
+                <div>
+                    <div class="form-group col-md-6">
+                        <label class="form">Airline address</label>
+                        <input type="text" class="form-control" id="airlineAddressInput" placeholder="Address">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="form">Airline name</label>
+                        <input type="text" class="form-control" id="airlineNameInput" placeholder="Name">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary" id="registerAirlineButton">Register Airline</button>
+                    </div>
+                </div>
+            </div> 
+
+            <button class="accordion">Fund Airline</button>
+            <div class="panel">
+                <div class="form-group col-md-10">
+                    <label class="form">Airline list</label>
+                    <div class="select">
+                        <select id="FundAirlineSelect">
+                        </select>
+                        <span class="focus"></span>
+                    </div>
+                </div>
+                <div class="form-group col-md-10">
+                    <label class="form">Airline Address:</label>
+                    <div class="select">
+                        <label class="form" id="FundAirlineAddressLabel"></label>
+                    </div>
+                </div>
+                <label class="form">Fund</label>
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">ETH</div>
+                    </div>
+                    <input type="text" class="form-control" id="fundAirlineEntry" 
+                    placeholder="Number of Ethers to fund. Needs 10 to be operational. You only can fund yourself.">
+                    <button type="submit" class="btn btn-primary" id="fundAirlineButton">Fund</button>
+                </div>
+            </div> 
+
+            <button class="accordion">Flight actions</button>
+            <div class="panel">
+                <div class="form-group col-md-10">
+                    <label class="form">Airline list</label>
+                    <div class="select">
+                        <select id="RegisterFlightAirlineSelect">
+                        </select>
+                        <span class="focus"></span>
+                    </div>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label class="form">Flight Number</label>
+                    <input type="text" class="form-control" id="FlightNumberInput" placeholder="Flight Number"
+                    onkeyup="this.value = this.value.toUpperCase();"> 
+                </div>
+                <div class="form-group col-md-6">
+                    <label class="form">Flight Destination</label>
+                    <input type="text" class="form-control" id="flightDestinationInput" placeholder="City name"
+                        onkeyup="this.value = this.value.toUpperCase();">
+                </div>
+
+                <button class="btn btn-primary" id="registerFlightButton">Register Flight</button>
+
+                <table class="table table-dark" id="flights-display">
+                    <thead>
+                        <tr>
+                        <th scope="col">Flight</th>
+                        <th scope="col">Destination</th>
+                        <th scope="col">Departure Time</th>
+                        <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table> 
+            </div>
+
+
+            <button class="accordion">Passengers actions</button>
+            <div class="panel">
+                
+                <div class="form-group col-md-6">
+                    <label class="form">Select Passenger</label>
+                    <select id="passenger-address-select">
+                        <!-- Dropdown options -->
+                    </select>
+                    <span class="focus"></span>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label class="form">Flight number</label>
+                    <input type="text" class="form-control" id="insurance-flight" onkeyup="this.value = this.value.toUpperCase();">
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label class="form">Insurance payment</label>
+                    <div class="input-group mb-2">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">ETH</div>
+                        </div>
+                        <input type="text" class="form-control" id="insurance-price">
+                    </div>
+                </div>
+                
+                <div class="form-group col-md-6">
+                    <button class="btn btn-primary" id="buy-insurance">Buy insurance</button>
+                </div>
+
+                <div class="form-row margin-top-20">
+                    <label class="form">Get paid</label>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                            <button class="btn btn-primary" id="check-credit">Check credit</button>
+                            <input type="text" class="form-control" id="credit-amount" placeholder="Here will be displayed your credit" disabled>
+                            <button class="btn btn-primary" id="claim-credit">Claim credit</button>
+                    </div>
+
+                </div>
+            </div>
+            
+            <button class="accordion">Oracle Actions</button>
+            <div class="panel">
+
+                <div class="margin-top-20">
+                    <h5 class="title-text">Choose the status the oracles will return for the flights</h5>
+                </div>
+                <div class="form-row margin-top-20" id='statusButton'>
+                    <div>
+                        <button class="btn btn-primary" value="10">On Time</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" value="20">Late Airline</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" value="30">Late Weather</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" value="40">Late Technical</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" value="50">Late Other</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" value="60">Unknown</button>
+                    </div>
+                </div>
+        
+                <div class="form-row margin-top-20">
+                    <div class="form-group col-md-10">
+                        <label class="form">Airline list</label>
+                        <div class="select">
+                            <select id="AirlineForOracleSelect">
+                                <!-- Dropdown options -->
+                            </select>
+                            <span class="focus"></span>
+                        </div>
+                    </div>
+                    <!-- <div class="form-group col-md-2">
+                        <label class="form">Selected Airline</label>
+                        <input type="text" class="form-control" id="selected-airline-name" placeholder="Name">
+                    </div>-->
+                    <div class="form-group col-md-6">
+                        <label class="form">Airline address</label>
+                        <input type="text" class="form-control" id="selected-airline-address">
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label class="form">Flight Number</label>
+                        <input type="text" class="form-control" id="flight-number" placeholder="Flight" onkeyup="this.value = this.value.toUpperCase();">
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="submit-oracle">
+                    <span class="spinner-border spinner-border-sm" role="status"
+                    aria-hidden="true" id="oracles-spinner"></span>
+                    Submit to Oracles
+                </button>
+            </div>
+
+            <div id="display-wrapper-bottom" class="top-20">
+            </div>
+            
+        </main>
+
+    </body>
+
+</html>
