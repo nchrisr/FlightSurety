@@ -27,23 +27,10 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
     address private contractOwner; // Account used to deploy contract
-    //address private testDataContract;
-
-    /*struct Flight {
-        bool isRegistered;
-        uint8 statusCode;
-        uint256 updatedTimestamp;
-        address airline;
-    }
-    mapping(bytes32 => Flight) private flights;*/
 
     FlightSuretyData private flightSuretyData;
 
     address private flightDataContractAddress;
-
-    // events
-
-    /*event BuyInsurance(address airline, address policyHolder, uint256 premiumAmount);*/
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -68,14 +55,6 @@ contract FlightSuretyApp {
      */
     modifier requireContractOwner() {
         require(msg.sender == contractOwner, "Caller is not contract owner");
-        _;
-    }
-
-    /**
-    * @dev Modifier that requires the data contract Owner account to be the function caller
-    */
-    modifier requireDataContractOwner() {
-        require(flightSuretyData.isContractOwner(msg.sender), "Caller is not the data contract owner");
         _;
     }
 
@@ -165,9 +144,8 @@ contract FlightSuretyApp {
     * @dev Modifier that makes sure the flight is not already registered.
     * 
     */
-    modifier requireFlightNotRegistered(bytes32 flightCode) {
-        bytes32 flightCode = getFlightKey(msg.sender, flightNumber, departureTimestamp);
-        require(!flightSuretyData.flightExists(flightCode), "Flight is already registered.");
+    modifier requireFlightNotRegistered(string flightNumber) {
+        require(!flightSuretyData.flightExists(flightNumber), "Flight is already registered.");
         _;
     }
 
@@ -175,8 +153,8 @@ contract FlightSuretyApp {
     * @dev Modifier that makes sure the flight is already registered.
     *
     */
-    modifier requireFlightRegistered(bytes32 flightCode){
-        require(flightSuretyData.flightExists(flightCode), "Flight is not registered.");
+    modifier requireFlightRegistered(string flightNumber){
+        require(flightSuretyData.flightExists(flightNumber), "Flight is not registered.");
         _;
     }
 
@@ -184,9 +162,8 @@ contract FlightSuretyApp {
     * @dev Modifier that makes sure the passengerAddress has paid Insurance for the flight.
     *
     */
-    modifier requireInsuarnacePaid(address passengerAddress, string flightNumber, uint256 departureTimestamp){
-        bytes32 flightCode = getFlightKey(msg.sender, flightNumber, departureTimestamp);
-        require(flightSuretyData.insurancePaid(passengerAddress, flightCode), "Address has not paid insurance for the flight.");
+    modifier requireInsurancePaid(address passengerAddress, string flightNumber){
+        require(flightSuretyData.insurancePaid(passengerAddress, flightNumber), "Address has not paid insurance for the flight.");
         _;
     }
 
@@ -194,9 +171,8 @@ contract FlightSuretyApp {
     * @dev Modifier that makes sure the passengerAddress has not paid Insurance for the flight.
     *
     */
-    modifier requireInsuranaceNotPaid(address passengerAddress, string flightNumber, uint256 departureTimestamp){
-        bytes32 flightCode = getFlightKey(msg.sender, flightNumber, departureTimestamp);
-        require(!flightSuretyData.insurancePaid(passengerAddress, flightCode), "Address has paid insurance for the flight.");
+    modifier requireInsuranceNotPaid(address passengerAddress, string flightNumber){
+        require(!flightSuretyData.insurancePaid(passengerAddress, flightNumber), "Address has paid insurance for the flight.");
         _;
     }
 
@@ -291,9 +267,7 @@ contract FlightSuretyApp {
         requireSenderIsNotAContract(msg.sender)
         requireValueIsSufficient(amountInWei)
         requireAirlineNotFunded(msg.sender)
-        requireSenderIsNotAContract(msg.sender)
     {
-        //TODO: Emit event to say that airline got funded.
         flightSuretyData.fundAirline.value(msg.value)(msg.sender, amountInWei);
     }
 
@@ -309,33 +283,42 @@ contract FlightSuretyApp {
         return flightSuretyData.getAirlineName(airlineAddress);
     }
 
+    function getAirlineIsRegistered(address airlineAddress) 
+        external view 
+        requireIsOperational
+        requireSenderIsNotAContract(msg.sender)
+        requireAirlineStored(airlineAddress)
+        returns(bool)
+    {
+        return flightSuretyData.getAirlineIsRegistered(airlineAddress);
+    }
+
     function registerFlight(uint256 departureTimestamp, string flightNumber, string destination)
         public
         requireIsOperational
         requireSenderIsNotAContract(msg.sender)
         requireAirlineRegistered(msg.sender)
         requireAirlineFunded(msg.sender)
-        requireFlightNotRegistered(flightCode)
+        requireFlightNotRegistered(flightNumber)
         returns (bool)
     {
-        bytes32 flightCode = getFlightKey(msg.sender, flightNumber, departureTimestamp);
-        return flightSuretyData.registerFlight(flightCode, msg.sender, departureTimestamp, flightNumber, destination);
+        uint8 statusCode = STATUS_CODE_UNKNOWN;
+        return flightSuretyData.registerFlight(msg.sender, departureTimestamp, flightNumber, destination, statusCode);
     }
 
-    function buyInsurance(bytes32 flightCode) 
+    function buyInsurance(string flightNumber) 
         external
         payable
         requireIsOperational
         requireSenderIsNotAContract(msg.sender)
-        requireInsuranaceNotPaid(msg.sender, flightCode)
+        requireInsuranceNotPaid(msg.sender, flightNumber)
         requireMessageHasValue
-        requireFlightRegistered(flightCode)
+        requireFlightRegistered(flightNumber)
     {
-        bytes32 flightCode = getFlightKey(msg.sender, flightNumber, departureTimestamp);
-        flightSuretyData.buyInsurance.value(msg.value)(msg.sender, flightCode);
+        flightSuretyData.buyInsurance.value(msg.value)(msg.sender, flightNumber);
     }
 
-    function creditInsurees(string flightCode)
+    function creditInsurees(string flightNumber)
         external
         requireIsOperational
         requireSenderIsNotAContract(msg.sender)
@@ -343,7 +326,7 @@ contract FlightSuretyApp {
         returns (bool)
 
     {
-        return flightSuretyData.creditInsurees(flightCode);
+        return flightSuretyData.creditInsurees(flightNumber);
     }
 
     function getCreditForPassenger()
@@ -371,42 +354,45 @@ contract FlightSuretyApp {
      *
      */
     function processFlightStatus(
-        address airline,
-        string memory flight,
+        string memory flightNumber,
         uint256 timestamp,
         uint8 statusCode
-    ) internal pure {
-
-        //TODO: Remove Pure and Implement.
-        bytes32 key = keccak256(abi.encodePacked(flight, airline));
-        require(flights[key].isRegistered, "Flight is not registered.");
-
-        flights[key].updatedTimestamp = timestamp;
-        flights[key].statusCode = statusCode;
+    ) 
+    internal
+    {
+        flightSuretyData.updateFlightTimestamp(flightNumber, timestamp);
+        flightSuretyData.updateFlightStatusCode(flightNumber, statusCode);
 
         if (statusCode == STATUS_CODE_LATE_AIRLINE) {
-            flightSuretyData.creditInsurees(flight);
+            flightSuretyData.creditInsurees(flightNumber);
         }
     }
 
     // Generate a request for oracles to fetch flight information
-    function fetchFlightStatus(
-        address airline,
-        string flight,
-        uint256 timestamp
-    ) external {
+    function fetchFlightStatus(address airline, string flightNumber, uint256 timestamp)
+        external 
+    {
         uint8 index = getRandomIndex(msg.sender);
 
         // Generate a unique key for storing the request
         bytes32 key = keccak256(
-            abi.encodePacked(index, airline, flight, timestamp)
+            abi.encodePacked(index, airline, flightNumber, timestamp)
         );
         oracleResponses[key] = ResponseInfo({
             requester: msg.sender,
             isOpen: true
         });
 
-        emit OracleRequest(index, airline, flight, timestamp);
+        emit OracleRequest(index, airline, flightNumber, timestamp);
+    }
+
+
+    // Query the status of any flight
+    function getFlightStatus(string flightNumber)
+        external view
+        returns(uint8)
+    {
+            return flightSuretyData.retrieveFlightStatus(flightNumber);
     }
 
     // region ORACLE MANAGEMENT
@@ -522,7 +508,7 @@ contract FlightSuretyApp {
             emit FlightStatusInfo(airline, flight, timestamp, statusCode);
 
             // Handle flight status as appropriate
-            processFlightStatus(airline, flight, timestamp, statusCode);
+            processFlightStatus(flight, timestamp, statusCode);
         }
     }
 

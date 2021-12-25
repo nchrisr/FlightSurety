@@ -41,10 +41,9 @@ contract FlightSuretyData {
         uint256 departureTimestamp;
         string flightNumber;
         string departureLocation;
+        uint8 statusCode;
     }
-    mapping(bytes32 => Flight) private flights; //flights
-    //TODO: Maybe add functionality for storing flights in an array as well?
-
+    mapping(string => Flight) private flights; //flights
 
     struct Passenger {
         address passengerAddress;
@@ -53,7 +52,7 @@ contract FlightSuretyData {
 
     // Maps a passengerAddress to a mapping (=>) that contains flightCode => amount of Insurance paid
     // This keeps track of which passenger has booked which flights. If true then address has booked the flight, if false then it has not.
-    mapping(address => mapping(bytes32 => uint256)) private flightBookings; 
+    mapping(address => mapping(string => uint256)) private flightBookings; 
     mapping(address => Passenger) private passengers;
     address[] public passengerAddresses;
 
@@ -272,12 +271,12 @@ contract FlightSuretyData {
     *
     * @return A bool that represents if the flightCode is already registered with an airline.
     */
-    function flightExists(bytes32 flightCode) public view
+    function flightExists(string flightNumber) public view
         requireIsOperational
         requireAddressAuthorized(msg.sender)
         returns(bool)
     {
-        return flights[flightCode].airlineAddress != address(0); 
+        return flights[flightNumber].airlineAddress != address(0); 
     }
 
     /**
@@ -285,12 +284,12 @@ contract FlightSuretyData {
     *
     * @return A bool that represents if the flightCode is already registered with an airline.
     */
-    function insurancePaid(address passengerAddress, bytes32 flightCode) public view
+    function insurancePaid(address passengerAddress, string flightNumber) public view
         requireIsOperational
         requireAddressAuthorized(msg.sender)
         returns(bool)
     {
-        return flightBookings[passengerAddress][flightCode] != 0; 
+        return flightBookings[passengerAddress][flightNumber] != 0; 
     }
 
 
@@ -325,12 +324,12 @@ contract FlightSuretyData {
     *
     * @return A bool that represents whether a passenger has bought insurance for specific flight.
     */
-    function passengerPaidInsuranceForFlight(address passengerAddress, bytes32 flightCode) public view
+    function passengerPaidInsuranceForFlight(address passengerAddress, string flightNumber) public view
         requireIsOperational
         requireAddressAuthorized(msg.sender)
         returns(bool)
     {
-        return flightBookings[passengerAddress][flightCode] > 0 ; 
+        return flightBookings[passengerAddress][flightNumber] > 0 ; 
     }
 
 
@@ -342,7 +341,6 @@ contract FlightSuretyData {
      */
     function isOperational() 
         public view
-        requireAddressAuthorized(msg.sender)
         returns (bool)
     {
         return operational;
@@ -458,6 +456,13 @@ contract FlightSuretyData {
         return airlines[airlineAddress].name;
     }
 
+    function getAirlineIsRegistered(address airlineAddress) public view
+        requireAddressAuthorized(msg.sender)
+        returns(bool)
+    {
+        return airlines[airlineAddress].isRegistered;
+    }
+
     /**
     * @dev Vote to register the new airline
     *
@@ -498,7 +503,7 @@ contract FlightSuretyData {
     *      resulting in insurance payouts, the contract should be self-sustaining
     */
     function fundAirline(address airlineAddress, uint256 amountInWei)
-        public
+        external
         payable
         requireIsOperational
         requireAddressAuthorized(msg.sender)
@@ -516,42 +521,68 @@ contract FlightSuretyData {
         
     }
 
-    //TODO: Remove
-    /**
-     * @dev Buy insurance for a flight
-     *
-     */
-    /*function buy() external payable {}*/
-
     /**
      * @dev Register a flight to an airline.
      *
      */
-    function registerFlight(bytes32 flightCode, address airlineAddress, uint256 departureTimestamp, string flightNumber, string destination)
+    function registerFlight(address airlineAddress, uint256 departureTimestamp, string flightNumber, string destination, uint8 statusCode)
             external
             requireAddressAuthorized(msg.sender)
             returns(bool success)
     {
         success = false;
-        flights[flightCode] = Flight({
+        flights[flightNumber] = Flight({
             airlineAddress: airlineAddress,
             airlineName: airlines[airlineAddress].name,
             departureTimestamp: departureTimestamp,
             flightNumber: flightNumber,
-            departureLocation: destination
+            departureLocation: destination,
+            statusCode: statusCode
         });
         success =true;
+        //flightsCount++;
 
         return success;
+    }
+
+    // Query the status of any flight
+    function retrieveFlightStatus(string flightNumber)
+        external view
+        requireAddressAuthorized(msg.sender)
+        returns(uint8)
+    {
+            return flights[flightNumber].statusCode;
+    }
+
+    /**
+     * @dev Update the status code for a given flight.
+     *
+     */
+    function updateFlightStatusCode(string flightNumber, uint8 statusCode)
+        external
+        requireAddressAuthorized(msg.sender)   
+    {
+        flights[flightNumber].statusCode = statusCode;
+    }
+
+    /**
+     * @dev Update the timestamp for a given flight.
+     *
+     */
+    function updateFlightTimestamp(string flightNumber, uint256 timestamp)
+        external
+        requireAddressAuthorized(msg.sender)    
+    {
+        flights[flightNumber].departureTimestamp = timestamp;
     }
 
     /**
      * @dev passengerAddress buys insurance for flightCode
      *
      */
-    function buyInsurance(address passengerAddress, bytes32 flightCode) 
+    function buyInsurance(address passengerAddress, string flightNumber) 
         external
-        payable 
+        payable
         requireAddressAuthorized(msg.sender)
     {
         if (passengers[passengerAddress].passengerAddress == address(0)){
@@ -563,28 +594,28 @@ contract FlightSuretyData {
         }
         
         if (msg.value > MAX_INSURANCE){
-            flightBookings[passengerAddress][flightCode] = MAX_INSURANCE;
+            flightBookings[passengerAddress][flightNumber] = MAX_INSURANCE;
             uint256 excess = msg.value.sub(MAX_INSURANCE);
             passengerAddress.transfer(excess);
         }else{
-            flightBookings[passengerAddress][flightCode] = msg.value;   
+            flightBookings[passengerAddress][flightNumber] = msg.value;   
         }
     }
 
     /**
      *  @dev Credit payouts to insurees
      */
-    function creditInsurees(bytes32 flightCode) 
+    function creditInsurees(string flightNumber) 
         external
         requireIsOperational 
         requireAddressAuthorized(msg.sender)
         returns(bool)
     {
         for (uint i = 0; i < passengerAddresses.length; i++) {
-            if(flightBookings[passengerAddresses[i]][flightCode] != 0) {
+            if(flightBookings[passengerAddresses[i]][flightNumber] != 0) {
                 uint256 currentCredit = passengers[passengerAddresses[i]].credit;
-                uint256 insurenceAmountPaid = flightBookings[passengerAddresses[i]][flightCode];
-                flightBookings[passengerAddresses[i]][flightCode] = 0;
+                uint256 insurenceAmountPaid = flightBookings[passengerAddresses[i]][flightNumber];
+                flightBookings[passengerAddresses[i]][flightNumber] = 0;
                 uint256 firstHalf = insurenceAmountPaid.div(2);
                 uint256 amountToPay = insurenceAmountPaid.add(firstHalf);
                 passengers[passengerAddresses[i]].credit = currentCredit.add(amountToPay);// + amountToPay ;
@@ -636,7 +667,7 @@ contract FlightSuretyData {
      *      resulting in insurance payouts, the contract should be self-sustaining
      *
      */
-    function fund() public payable {}
+    function fund() public payable {} 
 
     function getFlightKey(
         address airline,
