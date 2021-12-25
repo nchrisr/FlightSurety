@@ -27,3 +27,7 @@ This repository contains Smart Contract code in Solidity (using Truffle), tests 
 * [Solidity Language Reference](http://solidity.readthedocs.io/en/v0.4.24/)
 * [Ethereum Blockchain Explorer](https://etherscan.io/)
 * [Web3Js Reference](https://github.com/ethereum/wiki/wiki/JavaScript-API)
+
+## Other Info
+- `2_deploy_contracts.js` specifies 'http://localhost:7545' **(Ganache GUI)** as the VM for deploying the contracts. This can be changed to 'http://localhost:8545' if using Ganache CLI.
+- In src/server/server.js line 58 allows random status codes to be sent back. This can be changed to STATUS_CODE_LATE_AIRLINE, to test what happens if an airline is late.
